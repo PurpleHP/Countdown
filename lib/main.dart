@@ -34,19 +34,30 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   String _counter = "0";
-  DateTime today = DateTime.now();
   late Timer _timer;
-
+  DateTime endDate = DateTime.now();
   void startCountdown(DateTime end){
-    today = DateTime.now();
-    DateTime endDate = DateTime(end.day, end.month, end.year, 23, 59, 59);
-    _counter = today.difference(endDate).inSeconds.toString();
-     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+    DateTime today = DateTime.now();
+    int counterTemp = end.difference(today).inSeconds;
+    if (counterTemp < 0) _counter = "0"; // Ensure counter is not negative
+
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       setState(() {
-        int countTemp = int.parse(_counter);
-        countTemp--;
-        countTemp = countTemp < 0 ? 0 : countTemp;
-        _counter = countTemp.toString();
+        int counterTempCopy = counterTemp;
+        int days = counterTempCopy ~/ 86400;
+        counterTempCopy -= days * 86400;
+        int hours = counterTempCopy~/ 3600;
+        counterTempCopy -= hours * 3600;
+        int minutes = counterTempCopy~/ 60;
+        counterTempCopy -= minutes * 60;  
+        counterTemp--;
+        _counter = "$days days, $hours hours, $minutes minutes, $counterTempCopy seconds remaining.";
+        if (counterTemp < 0) {
+          counterTemp = 0;
+          _counter = counterTemp.toString();
+  
+          timer.cancel(); // Stop the timer when reaching 0
+        }
       });
     });
   }
@@ -66,7 +77,7 @@ class _MyHomePageState extends State<MyHomePage> {
     return Scaffold(
       appBar: AppBar(
 
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        backgroundColor: Theme.of(context).colorScheme.primary,
 
         title: Text(widget.title),
       ),
@@ -86,15 +97,28 @@ class _MyHomePageState extends State<MyHomePage> {
               );
 
               if (pickedDate != null) {
+                endDate = pickedDate;
                 startCountdown(pickedDate);
               }
             },
           ),
             const Text(
-              'Hi',
+              'HALLO :3',
+            ),
+            ElevatedButton(
+              onPressed: () {
+                _timer.cancel();
+              },
+              child: const Text('Stop Countdown'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                startCountdown(endDate);
+              },
+              child: const Text('Start Countdown'),
             ),
             Text(
-              '$_counter seconds remaining.',
+              _counter,
               style: Theme.of(context).textTheme.headlineMedium,
             ),
           ],
